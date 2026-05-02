@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CardioScan AI — Patient Statistics</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #05080f; --surface: #0c1120; --card: #111827;
+      --border: rgba(255,255,255,0.07); --accent: #e8315b;
+      --accent2: #f97316; --teal: #0ea5e9;
+      --text: #f1f5f9; --muted: #64748b; --label: #94a3b8;
+      --success: #10b981; --font-head: 'Syne',sans-serif; --font-body: 'DM Sans',sans-serif;
+    }
+    body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; }
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+      background: radial-gradient(ellipse 55% 45% at 15% 25%, rgba(232,49,91,0.11) 0%, transparent 70%),
+                  radial-gradient(ellipse 45% 40% at 85% 75%, rgba(14,165,233,0.09) 0%, transparent 70%);
+    }
+    nav {
+      position:sticky; top:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 40px; height:64px;
+      background:rgba(5,8,15,0.85); backdrop-filter:blur(18px);
+      border-bottom:1px solid var(--border);
+    }
+    .nav-brand { display:flex; align-items:center; gap:10px; font-family:var(--font-head); font-size:1.15rem; font-weight:700; }
+    .heart-icon { width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:grid;place-items:center;font-size:16px;box-shadow:0 0 18px rgba(232,49,91,0.4);animation:pulse-glow 2.8s ease-in-out infinite; }
+    @keyframes pulse-glow { 0%,100%{box-shadow:0 0 18px rgba(232,49,91,0.4)} 50%{box-shadow:0 0 32px rgba(232,49,91,0.75)} }
+    .nav-cta { background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:0.85rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;font-family:var(--font-body); }
+ 
+    .page-hero {
+      position:relative; z-index:1;
+      text-align:center; padding:56px 40px 32px;
+    }
+    .page-tag { display:inline-block; font-size:0.75rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
+    .page-hero h1 { font-family:var(--font-head); font-size:clamp(1.8rem,3vw,2.6rem); font-weight:800; letter-spacing:-.03em; }
+    .page-hero p { color:var(--muted); margin-top:10px; font-size:0.9rem; }
+ 
+    .content { position:relative; z-index:1; max-width:1000px; margin:0 auto; padding:0 40px 80px; }
+ 
+    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
+    .kpi-card {
+      background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px;
+      position:relative; overflow:hidden; transition:transform .2s;
+    }
+    .kpi-card:hover { transform:translateY(-2px); }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+    .kpi-card.k1::before { background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+    .kpi-card.k2::before { background:linear-gradient(90deg,var(--teal),#6366f1); }
+    .kpi-card.k3::before { background:linear-gradient(90deg,var(--success),var(--teal)); }
+    .kpi-card.k4::before { background:linear-gradient(90deg,#a78bfa,#ec4899); }
+    .kpi-icon { font-size:1.4rem; margin-bottom:12px; }
+    .kpi-val { font-family:var(--font-head); font-size:2rem; font-weight:800; }
+    .kpi-card.k1 .kpi-val { color:var(--accent); }
+    .kpi-card.k2 .kpi-val { color:var(--teal); }
+    .kpi-card.k3 .kpi-val { color:var(--success); }
+    .kpi-card.k4 .kpi-val { color:#a78bfa; }
+    .kpi-lbl { font-size:0.78rem; color:var(--muted); margin-top:4px; }
+ 
+    .chart-section {
+      background:var(--card); border:1px solid var(--border); border-radius:18px; overflow:hidden;
+      margin-bottom:24px;
+    }
+    .chart-header {
+      padding:20px 24px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .chart-title { font-family:var(--font-head); font-size:1rem; font-weight:700; }
+    .chart-sub { font-size:0.78rem; color:var(--muted); margin-top:2px; }
+    .chart-body { padding:24px; text-align:center; }
+    .chart-body img { max-width:100%; border-radius:10px; }
+    .chart-placeholder {
+      height:220px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+      color:var(--muted); font-size:0.88rem;
+    }
+    .chart-placeholder .ph-icon { font-size:2.5rem; opacity:.4; }
+ 
+    .back-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:10px; padding:11px 20px; color:var(--text);
+      font-size:0.85rem; font-weight:600; text-decoration:none;
+      transition:all .2s; font-family:var(--font-body);
+    }
+    .back-btn:hover { background:rgba(255,255,255,0.1); transform:translateY(-1px); }
+ 
+    footer { position:relative; z-index:1; border-top:1px solid var(--border); text-align:center; padding:24px; font-size:0.78rem; color:var(--muted); }
+    footer a { color:var(--accent); text-decoration:none; }
+ 
+    @keyframes slideUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+    .fade-up { opacity:0; transform:translateY(24px); animation:slideUp .6s ease forwards; }
+    .d1{animation-delay:.05s} .d2{animation-delay:.15s} .d3{animation-delay:.25s} .d4{animation-delay:.35s}
+ 
+    @media(max-width:700px) {
+      .kpi-row { grid-template-columns:1fr 1fr; }
+      nav { padding:0 20px; }
+      .content { padding:0 20px 60px; }
+    }
+  </style>
+</head>
+<body>
+ 
+<nav>
+  <div class="nav-brand">
+    <div class="heart-icon">❤️</div>
+    CardioScan AI
+  </div>
+  <a href="/" class="nav-cta">← New Assessment</a>
+</nav>
+ 
+<section class="page-hero">
+  <div class="page-tag">Analytics Dashboard</div>
+  <h1>Patient Risk Statistics</h1>
+  <p>Aggregated insights from all assessments processed through CardioScan AI.</p>
+</section>
+ 
+<div class="content">
+ 
+  <!-- KPI row -->
+  <div class="kpi-row">
+    <div class="kpi-card k1 fade-up d1">
+      <div class="kpi-icon">👥</div>
+      <div class="kpi-val">—</div>
+      <div class="kpi-lbl">Total Patients</div>
+    </div>
+    <div class="kpi-card k2 fade-up d2">
+      <div class="kpi-icon">⚠️</div>
+      <div class="kpi-val">—</div>
+      <div class="kpi-lbl">High Risk Cases</div>
+    </div>
+    <div class="kpi-card k3 fade-up d3">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-val">—</div>
+      <div class="kpi-lbl">Low Risk Cases</div>
+    </div>
+    <div class="kpi-card k4 fade-up d4">
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-val">91%</div>
+      <div class="kpi-lbl">Model Accuracy</div>
+    </div>
+  </div>
+ 
+  <!-- Chart card -->
+  <div class="chart-section fade-up d2">
+    <div class="chart-header">
+      <div>
+        <div class="chart-title">Risk Distribution Chart</div>
+        <div class="chart-sub">Breakdown of high vs low risk predictions</div>
+      </div>
+    </div>
+    <div class="chart-body">
+      <!-- Replace the src below with the Flask route: /static/chart.png -->
+      <img src="/static/chart.png" alt="Risk Distribution Chart"
+           onerror="this.style.display='none'; document.getElementById('ph').style.display='flex'"/>
+      <div class="chart-placeholder" id="ph" style="display:none">
+        <div class="ph-icon">📊</div>
+        <div>Chart will appear here once patients are assessed.</div>
+      </div>
+    </div>
+  </div>
+ 
+  <div style="margin-top:24px">
+    <a href="/" class="back-btn">← Back to Prediction</a>
+  </div>
+</div>
+ 
+<footer>
+  CardioScan AI · <a href="/">Run New Prediction</a>
+</footer>
+ 
+</body>
+</html>
